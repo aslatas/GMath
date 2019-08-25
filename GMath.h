@@ -78,14 +78,14 @@ https://github.com/HandmadeMath/Handmade-Math
 Handmade Math Credits:
 Primary Author: Zakary Strange (zak@strangedev.net && @strangezak)
 
-  Functionality: Matt Mascarenhas (@miblo_), Aleph, FieryDrake (@fierydrake),
+Functionality: Matt Mascarenhas (@miblo_), Aleph, FieryDrake (@fierydrake),
 Gingerbill (@TheGingerBill), Ben Visness (@bvisness),
 Trinton Bullard (@Peliex_Dev), @AntonDan
 
-  Fixes: Jeroen van Rijn (@J_vanRijn), Kiljacken (@Kiljacken),
+Fixes: Jeroen van Rijn (@J_vanRijn), Kiljacken (@Kiljacken),
 Insofaras (@insofaras), Daniel Gibson (@DanielGibson)
 
-   =============================================================================
+===============================================================================
    
 STILL TO DO
 
