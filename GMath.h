@@ -288,10 +288,8 @@ union IVec3
     struct {int width, height, depth;};
     struct {IVec2 xy; int ignored_0;};
     struct {int ignored_1; IVec2 yz;};
-    struct {IVec2 uv; int ignored_2;};
-    struct {int ignored_3; IVec2 vw;};
-    struct {IVec2 rg; int ignored_4;};
-    struct {int ignored_5; IVec2 gb;};
+    struct {IVec2 rg; int ignored_2;};
+    struct {int ignored_3; IVec2 gb;};
     int data[3];
     
     inline int& operator[](int i) {return data[i];}
