@@ -86,7 +86,7 @@ Fixes: Jeroen van Rijn (@J_vanRijn), Kiljacken (@Kiljacken),
 Insofaras (@insofaras), Daniel Gibson (@DanielGibson)
 
 ===============================================================================
-   
+
 STILL TO DO
 
 - Put functions into a GMath namespace, to prevent name collisions. This is a
@@ -123,6 +123,20 @@ better maintained than this modified version.
 
 #ifndef GMATH_H
 #define GMATH_H
+
+#ifdef _MSC_VER
+#pragma warning(disable:4201)
+#endif
+
+#ifdef __clang__
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wgnu-anonymous-struct"
+#endif
+
+#if defined(__GNUC__) && (__GNUC__ == 4 && __GNUC_MINOR__ < 8)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wmissing-braces"
+#endif
 
 #ifndef GMATH_NO_INTRINSICS
 #ifdef _MSC_VER
@@ -246,7 +260,7 @@ union IVec2
         y -= scalar;
         return *this;
     }
-    IVec2() : x(0), y(0) {};
+    IVec2() = default;
     IVec2(int fill) : x(fill), y(fill) {};
     IVec2(int x, int y) : x(x), y(y) {};
     IVec2(Vec2 vec);
@@ -339,7 +353,7 @@ union IVec3
         z /= scalar;
         return *this;
     }
-    IVec3() : x(0), y(0), z(0) {}
+    IVec3() = default;
     IVec3(int fill) : x(fill), y(fill), z(fill) {}
     IVec3(int x, int y, int z) : x(x), y(y), z(z) {}
     IVec3(Vec3 vec);
@@ -427,7 +441,7 @@ union Vec2
         y /= scalar;
         return *this;
     }
-    Vec2() : x(0), y(0) {}
+    Vec2() = default;
     Vec2(float fill) : x(fill), y(fill) {}
     Vec2(float x, float y) : x(x), y(y) {}
     Vec2(IVec2 vec);
@@ -529,7 +543,7 @@ union Vec3
         z /= scalar;
         return *this;
     }
-    Vec3() : x(0.0f), y(0.0f), z(0.0f) {}
+    Vec3() = default;
     Vec3(float fill) : x(fill), y(fill), z(fill) {}
     Vec3(float x, float y, float z) : x(x), y(y), z(z) {}
     Vec3(IVec3 vec);
@@ -640,7 +654,6 @@ union Vec4
     // implementations: One when SSE is enabled, and one for when it isn't.
     inline Vec4& operator+=(Vec4 vec)
     {
-        Vec4 result;
 #ifdef GMATH_USE_SSE
         data_sse = _mm_add_ps(data_sse, vec.data_sse);
 #else
@@ -715,7 +728,7 @@ union Vec4
 #endif
         return *this;
     }
-    Vec4();
+    Vec4() = default;
     Vec4(float fill);
     Vec4(Vec3 xyz, float w);
     Vec4(float x, float y, float z, float w);
@@ -1490,17 +1503,6 @@ Vec3::Vec3(IVec3 vec)
 
 // Vec4/Quat constructors.
 
-Vec4::Vec4()
-{
-#ifdef GMATH_USE_SSE
-    data_sse = _mm_set1_ps(0.0f);
-#else
-    x = 0.0f;
-    y = 0.0f;
-    z = 0.0f;
-    w = 0.0f;
-#endif
-}
 Vec4::Vec4(float fill)
 {
 #ifdef GMATH_USE_SSE
