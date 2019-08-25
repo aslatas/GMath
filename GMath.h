@@ -213,6 +213,7 @@ inline size_t ComputePadding(size_t alignment, size_t min_offset)
 union IVec2
 {
     struct {int x, y;};
+    struct {int r, g;};
     struct {int width, height;};
     int data[2];
     
