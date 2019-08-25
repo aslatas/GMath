@@ -285,7 +285,6 @@ union IVec3
 {
     struct {int x, y, z;};
     struct {int r, g, b;};
-    struct {int u, v, w;};
     struct {int width, height, depth;};
     struct {IVec2 xy; int ignored_0;};
     struct {int ignored_1; IVec2 yz;};
