@@ -1,7 +1,7 @@
 /*
 ================================================================================
 
-Graphics Math Library version 1.0.1 (public domain)
+Graphics Math Library version 1.0.2 (public domain)
 
  GMath is a single-header C++ library for vector, matrix, and quaternion math,
 primarily for use in graphics applications. As a C++ only library it uses
@@ -29,8 +29,8 @@ define GMATH_NO_INTRINSICS in that same source file, like so:
 #define GMATH_IMPLEMENTATION
 #include "GMath.h"
 
-Finally, if you would like to avoid including <math.h>, you'll need to define
-the following, substituting your own functions for my_x_function:
+If you would like to avoid including <math.h>, you'll need to define the
+following, substituting your own functions for my_x_function:
 
 #define GMATH_EXP my_exp_function
 #define GMATH_LOG my_log_function
