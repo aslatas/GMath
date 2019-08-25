@@ -918,7 +918,7 @@ union Mat4
     
     inline Vec4 operator[](int i) {return columns[i];}
     inline const Vec4 operator[](int i) const {return columns[i];}
-    Mat4() : columns{{}, {}, {}, {}} {}; // NOTE(Matt): That's a lot of braces, lol.
+    Mat4() = default;
     Mat4(float diagonal) : columns{{diagonal, 0.0f, 0.0f, 0.0f}, {0.0f, diagonal, 0.0f, 0.0f}, {0.0f, 0.0f, diagonal, 0.0f}, {0.0f, 0.0f, 0.0f, diagonal}} {};
     Mat4(Quat quat);
     const static Mat4 Zero;
@@ -990,7 +990,7 @@ union Quat
         float w;
     };
     
-    Quat();
+    Quat() = default;
     Quat(float x, float y, float z, float w);
     Quat(Vec3 axis, float angle);
     Quat(Vec4 vec);
@@ -1572,7 +1572,6 @@ Quat::Quat(float fill)
 #endif
 }
 
-Quat::Quat() : x(0.0f), y(0.0f), z(0.0f), w(0.0f) {};
 Quat::Quat(Vec3 axis, float angle)
 {
     Quat result;
