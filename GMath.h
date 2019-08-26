@@ -48,6 +48,14 @@ following, substituting your own functions for my_x_function:
 If you define all of these functions, then GMath will not include the <math.h>
 header. This is useful if you'd like to avoid depending on the CRT library.
 
+When creating a camera projection matrix, the default behavior for GMATH is to
+use the range [-1..1] for depth. If you'd like to use the range [0..1], you must
+define GMATH_DEPTH_ZERO_TO_ONE in the source file, like so:
+
+#define GMATH_DEPTH_ZERO_TO_ONE
+#define GMATH_IMPLEMENTATION
+#include "GMath.h"
+
 Finally, GMath provides a set of functions for printing vector, matrix, and
 quaternion types, which is disabled by default. To enable printing via IOStream,
 define GMATH_USE_IOSTREAM in the source file, like so:
@@ -565,6 +573,7 @@ union Vec3
     Vec3() = default;
     Vec3(float fill) : x(fill), y(fill), z(fill) {}
     Vec3(float x, float y, float z) : x(x), y(y), z(z) {}
+    Vec3(Vec2 xy, float z);
     Vec3(IVec3 vec);
     const static Vec3 Zero;
     const static Vec3 One;
@@ -1392,11 +1401,15 @@ inline Mat4 OrthographicProjection(float left, float right, float bottom, float 
     Mat4 result = {};
     result[0][0] = 2.0f / (right - left);
     result[1][1] = 2.0f / (top - bottom);
+#ifdef GMATH_DEPTH_ZERO_TO_ONE
+    result[2][2] = 1.0f / (near - far);
+#else
     result[2][2] = 2.0f / (near - far);
+#endif
     result[3][3] = 1.0f;
     result[3][0] = (left + right) / (left - right);
     result[3][1] = (bottom + top) / (bottom - top);
-    result[3][2] = (far + near) / (near - far);
+    result[3][2] = near / (near - far);
     return result;
 }
 
@@ -1417,8 +1430,12 @@ inline Mat4 PerspectiveProjection(float fov, float aspect, float near, float far
     result[0][0] = cotan / aspect;
     result[1][1] = cotan;
     result[2][3] = -1.0f;
-    result[2][2] = (near + far) / (near - far);
+    result[2][2] = far / (near - far);// (near + far) / (near - far);
+#ifdef GMATH_DEPTH_ZERO_TO_ONE
+    result[3][2] = (near * far) / (near - far);
+#else
     result[3][2] = (2.0f * near * far) / (near - far);
+#endif
     return result;
 }
 
@@ -1520,6 +1537,11 @@ Vec3::Vec3(IVec3 vec)
     z = (float)vec.z;
 }
 
+Vec3::Vec3(Vec2 xy, float z)
+{
+    this->xy = xy;
+    this->z = z;
+}
 // Vec4/Quat constructors.
 
 Vec4::Vec4(float fill)
@@ -1677,7 +1699,7 @@ Mat4 LookAtMatrix(Vec3 location, Vec3 target, Vec3 world_up)
     result[0] = {right.x, up.x, -forward.x, 0.0f};
     result[1] = {right.y, up.y, -forward.y, 0.0f};
     result[2] = {right.z, up.z, -forward.z, 0.0f};
-    result[3] = {-Dot(right, location), -Dot(up, location), -Dot(forward, location), 1.0f};
+    result[3] = {-Dot(right, location), -Dot(up, location), Dot(forward, location), 1.0f};
     return result;
 }
 
