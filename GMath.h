@@ -161,6 +161,10 @@ better maintained than this modified version.
 #include <math.h>
 #endif
 
+#ifdef GMATH_USE_IOSTREAM
+#include <iostream>
+#endif
+
 #ifndef GMATH_SIN
 #define GMATH_SIN sinf
 #endif
@@ -234,8 +238,16 @@ union IVec2
     inline int& operator[](int i) {return data[i];}
     inline const int& operator[] (int i) const {return data[i];}
     inline IVec2 operator-() const {return {-x, -y};}
-    inline IVec2& operator++() {++x, ++y;}
-    inline IVec2& operator--() {--x, --y;}
+    inline IVec2& operator++()
+    {
+        ++x;
+        ++y;
+        return *this;
+    }
+    inline IVec2& operator--() {
+        --x, --y;
+        return *this;
+    }
     inline IVec2& operator+=(IVec2 vec)
     {
         x += vec.x;
@@ -309,8 +321,20 @@ union IVec3
     inline int& operator[](int i) {return data[i];}
     inline const int& operator[] (int i) const {return data[i];}
     inline IVec3 operator-() const {return {-x, -y, -z};}
-    inline IVec3& operator++() {++x, ++y, ++z;}
-    inline IVec3& operator--() {--x, --y, --z;}
+    inline IVec3& operator++()
+    {
+        ++x;
+        ++y;
+        ++z;
+        return *this;
+    }
+    inline IVec3& operator--()
+    {
+        --x;
+        --y;
+        --z;
+        return *this;
+    }
     inline IVec3& operator+=(IVec3 vec)
     {
         x += vec.x;
@@ -403,7 +427,7 @@ union Vec2
     float data[2];
     
     inline float& operator[](int i) {return data[i];}
-    inline const float& operator[] (s32 i) const {return data[i];}
+    inline const float& operator[] (int i) const {return data[i];}
     inline Vec2 operator-() const {return {-x, -y};}
     inline Vec2& operator+=(Vec2 vec)
     {
@@ -472,11 +496,6 @@ inline Vec2 operator+(Vec2 a, Vec2 b) {return {a.x + b.x, a.y + b.y};}
 inline Vec2 operator-(Vec2 a, Vec2 b) {return {a.x - b.x, a.y - b.y};}
 inline bool operator==(Vec2 a, Vec2 b)
 {
-#ifdef GMATH_USE_SSE
-    std::cout << "Hey." << std::endl;
-#else
-    std::cout << "Hey, no SSE." << std::endl;
-#endif
     return (a.x == b.x && a.y == b.y);
 }
 #ifdef GMATH_USE_IOSTREAM
@@ -499,7 +518,7 @@ union Vec3
     struct {float ignored_5; Vec2 gb;};
     
     inline float& operator[](int i) {return data[i];}
-    inline const float& operator[] (s32 i) const {return data[i];}
+    inline const float& operator[] (int i) const {return data[i];}
     inline Vec3 operator-() const {return {-x, -y, -z};}
     inline Vec3& operator+=(Vec3 vec)
     {
@@ -647,7 +666,7 @@ union Vec4
 #endif
     
     inline float& operator[](int i) {return data[i];}
-    inline const float& operator[] (s32 i) const {return data[i];}
+    inline const float& operator[] (int i) const {return data[i];}
     inline Vec4 operator-() const {return {-x, -y, -z, -w};}
     
     // Almost all Vec4 operators/functions from this point forward have two
@@ -916,8 +935,8 @@ union Mat4
     __m128 data_sse[4];
 #endif
     
-    inline Vec4 operator[](int i) {return columns[i];}
-    inline const Vec4 operator[](int i) const {return columns[i];}
+    inline Vec4& operator[](int i) {return columns[i];}
+    inline const Vec4& operator[](int i) const {return columns[i];}
     Mat4() = default;
     Mat4(float diagonal) : columns{{diagonal, 0.0f, 0.0f, 0.0f}, {0.0f, diagonal, 0.0f, 0.0f}, {0.0f, 0.0f, diagonal, 0.0f}, {0.0f, 0.0f, 0.0f, diagonal}} {};
     Mat4(Quat quat);
@@ -1197,7 +1216,7 @@ inline float Dot(Vec2 a, Vec2 b)
 
 inline float Dot(Vec3 a, Vec3 b)
 {
-    return a.x * b.x + a.y * b.y + a.z + b.z;
+    return a.x * b.x + a.y * b.y + a.z * b.z;
 }
 inline float Dot(Vec4 a, Vec4 b)
 {
