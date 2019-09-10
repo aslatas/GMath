@@ -1,7 +1,7 @@
 /*
 ================================================================================
 
-Graphics Math Library version 1.0.2 (public domain)
+Graphics Math Library version 1.1.2 (public domain)
 
  GMath is a single-header C++ library for vector, matrix, and quaternion math,
 primarily for use in graphics applications. As a C++ only library it uses
@@ -163,14 +163,14 @@ better maintained than this modified version.
 #include <xmmintrin.h>
 #endif
 
+#ifdef GMATH_USE_IOSTREAM
+#include <iostream>
+#endif
+
 #if !defined(GMATH_SIN) || !defined(GMATH_COS) || !defined(GMATH_TAN) || \
 !defined(GMATH_SQRT) || !defined(GMATH_EXP) || !defined(GMATH_LOG) ||    \
 !defined(GMATH_ACOS) || !defined(GMATH_ATAN)|| !defined(GMATH_ATAN2)
 #include <math.h>
-#endif
-
-#ifdef GMATH_USE_IOSTREAM
-#include <iostream>
 #endif
 
 #ifndef GMATH_SIN
@@ -220,13 +220,13 @@ better maintained than this modified version.
 #define GMATH_MOD(a, b) ((a) % (b)) >= 0 ? ((a) % (b)) : (((a) % (b)) + (b))
 
 // Forward declarations for types.
-union IVec2;
-union IVec3;
-union Vec2;
-union Vec3;
-union Vec4;
-union Mat4;
-union Quat;
+struct IVec2;
+struct IVec3;
+struct Vec2;
+struct Vec3;
+struct Vec4;
+struct Mat4;
+struct Quat;
 
 // TODO(Matt): This doesn't really belong here. Move it to a different math library.
 inline size_t ComputePadding(size_t alignment, size_t min_offset)
@@ -235,25 +235,27 @@ inline size_t ComputePadding(size_t alignment, size_t min_offset)
 }
 
 // Integer vector types (two and three components).
-
-union IVec2
+struct IVec2
 {
-    struct {int x, y;};
-    struct {int r, g;};
-    struct {int width, height;};
-    int data[2];
-    
+    union
+    {
+        struct {int x, y;};
+        struct {int r, g;};
+        struct {int width, height;};
+        int data[2];
+    };
     inline int& operator[](int i) {return data[i];}
-    inline const int& operator[] (int i) const {return data[i];}
+    inline const int& operator[](int i) const {return data[i];}
     inline IVec2 operator-() const {return {-x, -y};}
     inline IVec2& operator++()
     {
-        ++x;
-        ++y;
+        ++x;++y;
         return *this;
     }
-    inline IVec2& operator--() {
-        --x, --y;
+    inline IVec2& operator--()
+    {
+        --x;
+        --y;
         return *this;
     }
     inline IVec2& operator+=(IVec2 vec)
@@ -280,10 +282,7 @@ union IVec2
         y -= scalar;
         return *this;
     }
-    IVec2() = default;
-    IVec2(int fill) : x(fill), y(fill) {};
-    IVec2(int x, int y) : x(x), y(y) {};
-    IVec2(Vec2 vec);
+    inline operator Vec2() const;
     const static IVec2 Zero;
     const static IVec2 One;
     const static IVec2 Right;
@@ -291,6 +290,9 @@ union IVec2
     const static IVec2 Left;
     const static IVec2 Down;
 };
+inline IVec2 CreateIVec2() {return {};};
+inline IVec2 CreateIVec2(int fill) {return {fill, fill};};
+inline IVec2 CreateIVec2(int x, int y) {return {x, y};};
 const IVec2 IVec2::Zero = {0, 0};
 const IVec2 IVec2::One = {1, 1};
 const IVec2 IVec2::Right = {1, 0};
@@ -310,24 +312,25 @@ inline IVec2 operator*(IVec2 a, IVec2 b) {return {a.x * b.x, a.y};}
 inline IVec2 operator/(IVec2 a, IVec2 b) {return {a.x / b.x, a.y / b.y};}
 inline IVec2 operator+(IVec2 a, IVec2 b) {return {a.x + b.x, a.y + b.y};}
 inline IVec2 operator-(IVec2 a, IVec2 b) {return {a.x - b.x, a.y - b.y};}
-inline IVec2 operator==(IVec2 a, IVec2 b) {return (a.x == b.x && a.y == b.y);}
+inline bool operator==(IVec2 a, IVec2 b) {return (a.x == b.x && a.y == b.y);}
 #ifdef GMATH_USE_IOSTREAM
 std::ostream& operator<<(std::ostream& a, IVec2 b) {return a << "(" << b.x << ", " << b.y << ")";}
 #endif
-
-union IVec3
+struct IVec3
 {
-    struct {int x, y, z;};
-    struct {int r, g, b;};
-    struct {int width, height, depth;};
-    struct {IVec2 xy; int ignored_0;};
-    struct {int ignored_1; IVec2 yz;};
-    struct {IVec2 rg; int ignored_2;};
-    struct {int ignored_3; IVec2 gb;};
-    int data[3];
-    
+    union
+    {
+        struct {int x, y, z;};
+        struct {int r, g, b;};
+        struct {int width, height, depth;};
+        struct {IVec2 xy; int ignored_0;};
+        struct {int ignored_1; IVec2 yz;};
+        struct {IVec2 rg; int ignored_2;};
+        struct {int ignored_3; IVec2 gb;};
+        int data[3];
+    };
     inline int& operator[](int i) {return data[i];}
-    inline const int& operator[] (int i) const {return data[i];}
+    inline const int& operator[](int i) const {return data[i];}
     inline IVec3 operator-() const {return {-x, -y, -z};}
     inline IVec3& operator++()
     {
@@ -385,10 +388,7 @@ union IVec3
         z /= scalar;
         return *this;
     }
-    IVec3() = default;
-    IVec3(int fill) : x(fill), y(fill), z(fill) {}
-    IVec3(int x, int y, int z) : x(x), y(y), z(z) {}
-    IVec3(Vec3 vec);
+    inline operator Vec3() const;
     const static IVec3 Zero;
     const static IVec3 One;
     const static IVec3 Right;
@@ -398,6 +398,11 @@ union IVec3
     const static IVec3 Forward;
     const static IVec3 Backward;
 };
+inline IVec3 CreateIVec3() {return {};};
+inline IVec3 CreateIVec3(int fill) {return {fill, fill, fill};};
+inline IVec3 CreateIVec3(IVec2 xy, int z) {return {xy.x, xy.y, z};};
+inline IVec3 CreateIVec3(int x, IVec2 yz) {return {x, yz.x, yz.y};};
+inline IVec3 CreateIVec3(int x, int y, int z) {return {x, y, z};};
 const IVec3 IVec3::Zero = {0, 0, 0};
 const IVec3 IVec3::One = {1, 1, 1};
 const IVec3 IVec3::Right = {1, 0, 0};
@@ -418,24 +423,25 @@ inline IVec3 operator*(IVec3 a, IVec3 b) {return {a.x * b.x, a.y * b.y, a.z * b.
 inline IVec3 operator/(IVec3 a, IVec3 b) {return {a.x / b.x, a.y / b.y, a.z / b.z};}
 inline IVec3 operator+(IVec3 a, IVec3 b) {return {a.x + b.x, a.y + b.y, a.z + b.z};}
 inline IVec3 operator-(IVec3 a, IVec3 b) {return {a.x - b.x, a.y - b.y, a.z - b.z};}
-inline IVec3 operator==(IVec3 a, IVec3 b) {return (a.x == b.x && a.y == b.y && a.z == b.z);}
+inline bool operator==(IVec3 a, IVec3 b) {return (a.x == b.x && a.y == b.y && a.z == b.z);}
 #ifdef GMATH_USE_IOSTREAM
 std::ostream& operator<<(std::ostream& a, IVec3 b) {return a << "(" << b.x << ", " << b.y << ", " << b.z << ")";}
 #endif
 
 // Floating point vector types (two, three, and four components).
 // Four component vector uses SSE optimizations if enabled.
-
-union Vec2
+struct Vec2
 {
-    struct {float x, y;};
-    struct {float r, g;};
-    struct {float u, v;};
-    struct {float width, height;};
-    float data[2];
-    
+    union
+    {
+        struct {float x, y;};
+        struct {float r, g;};
+        struct {float u, v;};
+        struct {float width, height;};
+        float data[2];
+    };
     inline float& operator[](int i) {return data[i];}
-    inline const float& operator[] (int i) const {return data[i];}
+    inline const float& operator[](int i) const {return data[i];}
     inline Vec2 operator-() const {return {-x, -y};}
     inline Vec2& operator+=(Vec2 vec)
     {
@@ -473,10 +479,7 @@ union Vec2
         y /= scalar;
         return *this;
     }
-    Vec2() = default;
-    Vec2(float fill) : x(fill), y(fill) {}
-    Vec2(float x, float y) : x(x), y(y) {}
-    Vec2(IVec2 vec);
+    inline operator IVec2() const;
     const static Vec2 Zero;
     const static Vec2 One;
     const static Vec2 Right;
@@ -484,6 +487,9 @@ union Vec2
     const static Vec2 Left;
     const static Vec2 Down;
 };
+inline Vec2 CreateVec2() {return {};};
+inline Vec2 CreateVec2(float fill) {return {fill, fill};};
+inline Vec2 CreateVec2(float x, float y) {return {x, y};};
 const Vec2 Vec2::Zero = {0.0f, 0.0f};
 const Vec2 Vec2::One = {1.0f, 1.0f};
 const Vec2 Vec2::Right = {1.0f, 0.0f};
@@ -502,31 +508,29 @@ inline Vec2 operator*(Vec2 a, Vec2 b) {return {a.x * b.x, a.y * b.y};}
 inline Vec2 operator/(Vec2 a, Vec2 b) {return {a.x / b.y, a.y / b.y};}
 inline Vec2 operator+(Vec2 a, Vec2 b) {return {a.x + b.x, a.y + b.y};}
 inline Vec2 operator-(Vec2 a, Vec2 b) {return {a.x - b.x, a.y - b.y};}
-inline bool operator==(Vec2 a, Vec2 b)
-{
-    return (a.x == b.x && a.y == b.y);
-}
+inline bool operator==(Vec2 a, Vec2 b) {return (a.x == b.x && a.y == b.y);}
 #ifdef GMATH_USE_IOSTREAM
 std::ostream& operator<<(std::ostream& a, Vec2 b) {return a << "(" << b.x << ", " << b.y << ")";}
 #endif
-
-union Vec3
+struct Vec3
 {
-    struct {float x, y, z;};
-    struct {float r, g, b;};
-    struct {float u, v, w;};
-    struct {float width, height, depth;};
-    float data[3];
-    
-    struct {Vec2 xy; float ignored_0;};
-    struct {float ignored_1; Vec2 yz;};
-    struct {Vec2 uv; float ignored_2;};
-    struct {float ignored_3; Vec2 vw;};
-    struct {Vec2 rg; float ignored_4;};
-    struct {float ignored_5; Vec2 gb;};
-    
+    union
+    {
+        struct {float x, y, z;};
+        struct {float r, g, b;};
+        struct {float u, v, w;};
+        struct {float width, height, depth;};
+        float data[3];
+        
+        struct {Vec2 xy; float ignored_0;};
+        struct {float ignored_1; Vec2 yz;};
+        struct {Vec2 uv; float ignored_2;};
+        struct {float ignored_3; Vec2 vw;};
+        struct {Vec2 rg; float ignored_4;};
+        struct {float ignored_5; Vec2 gb;};
+    };
     inline float& operator[](int i) {return data[i];}
-    inline const float& operator[] (int i) const {return data[i];}
+    inline const float& operator[](int i) const {return data[i];}
     inline Vec3 operator-() const {return {-x, -y, -z};}
     inline Vec3& operator+=(Vec3 vec)
     {
@@ -570,11 +574,7 @@ union Vec3
         z /= scalar;
         return *this;
     }
-    Vec3() = default;
-    Vec3(float fill) : x(fill), y(fill), z(fill) {}
-    Vec3(float x, float y, float z) : x(x), y(y), z(z) {}
-    Vec3(Vec2 xy, float z);
-    Vec3(IVec3 vec);
+    inline operator IVec3() const;
     const static Vec3 Zero;
     const static Vec3 One;
     const static Vec3 Right;
@@ -592,6 +592,11 @@ union Vec3
     const static Vec3 Black;
     const static Vec3 White;
 };
+inline Vec3 CreateVec3() {return {};};
+inline Vec3 CreateVec3(float fill) {return {fill, fill, fill};};
+inline Vec3 CreateVec3(Vec2 xy, float z) {return {xy.x, xy.y, z};};
+inline Vec3 CreateVec3(float x, Vec2 yz) {return {x, yz.x, yz.y};};
+inline Vec3 CreateVec3(float x, float y, float z) {return {x, y, z};};
 const Vec3 Vec3::Zero = {0.0f, 0.0f, 0.0f};
 const Vec3 Vec3::One = {1.0f, 1.0f, 1.0f};
 const Vec3 Vec3::Right = {1.0f, 0.0f, 0.0f};
@@ -622,58 +627,63 @@ inline Vec3 operator+(Vec3 a, Vec3 b) {return {a.x + b.x, a.y + b.y, a.z + b.z};
 inline Vec3 operator-(Vec3 a, Vec3 b) {return {a.x - b.x, a.y - b.y, a.z - b.z};}
 inline bool operator==(Vec3 a, Vec3 b) {return (a.x == b.x && a.y == b.y && a.z == b.z);}
 #ifdef GMATH_USE_IOSTREAM
-std::ostream& operator<<(std::ostream& a, Vec3 b) {return a << "(" << b.x << ", " << b.y << ", " << b.z << ")";}
+std::ostream& operator<<(std::ostream& a, Vec3 b)
+{
+    return a << "(" << b.x << ", " << b.y << ", " << b.z << ")";
+}
 #endif
 
-union Vec4
+struct Vec4
 {
-    float data[4];
-    struct
+    union
     {
-        union
+        float data[4];
+        struct
         {
-            Vec3 xyz;
-            struct {float x, y, z;};
+            union
+            {
+                Vec3 xyz;
+                struct {float x, y, z;};
+            };
+            float w;
         };
-        float w;
-    };
-    
-    struct
-    {
-        union
+        
+        struct
         {
-            Vec3 rgb;
-            struct {float r, g, b;};
+            union
+            {
+                Vec3 rgb;
+                struct {float r, g, b;};
+            };
+            float a;
         };
-        float a;
-    };
-    
-    struct
-    {
-        Vec2 xy;
-        float ignored_0;
-        float ignored_1;
-    };
-    
-    struct
-    {
-        float ignored_2;
-        Vec2 yz;
-        float ignored_3;
-    };
-    
-    struct
-    {
-        float ignored_4;
-        float ignored_5;
-        Vec2 zw;
-    };
-    
-    // SSE type (four packed single precision floats).
+        
+        struct
+        {
+            Vec2 xy;
+            float ignored_0;
+            float ignored_1;
+        };
+        
+        struct
+        {
+            float ignored_2;
+            Vec2 yz;
+            float ignored_3;
+        };
+        
+        struct
+        {
+            float ignored_4;
+            float ignored_5;
+            Vec2 zw;
+        };
+        
+        // SSE type (four packed single precision floats).
 #ifdef GMATH_USE_SSE
-    __m128 data_sse;
+        __m128 data_sse;
 #endif
-    
+    };
     inline float& operator[](int i) {return data[i];}
     inline const float& operator[] (int i) const {return data[i];}
     inline Vec4 operator-() const {return {-x, -y, -z, -w};}
@@ -756,10 +766,6 @@ union Vec4
 #endif
         return *this;
     }
-    Vec4() = default;
-    Vec4(float fill);
-    Vec4(Vec3 xyz, float w);
-    Vec4(float x, float y, float z, float w);
     const static Vec4 Zero;
     const static Vec4 One;
     const static Vec4 Right;
@@ -777,6 +783,10 @@ union Vec4
     const static Vec4 Black;
     const static Vec4 White;
 };
+inline Vec4 CreateVec4();
+inline Vec4 CreateVec4(float fill);
+inline Vec4 CreateVec4(Vec3 xyz, float w);
+inline Vec4 CreateVec4(float x, float y, float z, float w);
 const Vec4 Vec4::Zero = {0.0f, 0.0f, 0.0f, 0.0f};
 const Vec4 Vec4::One = {1.0f, 1.0f, 1.0f, 1.0f};
 const Vec4 Vec4::Right = {1.0f, 0.0f, 0.0f, 0.0f};
@@ -936,24 +946,34 @@ std::ostream& operator<<(std::ostream& a, Vec4 b)
 
 // 4x4 Matrix type, column major. Uses SSE if enabled.
 
-union Mat4
+struct Mat4
 {
-    Vec4 columns[4];
-    
+    union
+    {
+        Vec4 columns[4];
+        
 #ifdef GMATH_USE_SSE
-    __m128 data_sse[4];
+        __m128 data_sse[4];
 #endif
-    
-    inline Vec4& operator[](int i) {return columns[i];}
-    inline const Vec4& operator[](int i) const {return columns[i];}
-    Mat4() = default;
-    Mat4(float diagonal) : columns{{diagonal, 0.0f, 0.0f, 0.0f}, {0.0f, diagonal, 0.0f, 0.0f}, {0.0f, 0.0f, diagonal, 0.0f}, {0.0f, 0.0f, 0.0f, diagonal}} {};
-    Mat4(Quat quat);
+    };
+    inline Vec4 operator[](int i) {return columns[i];}
+    inline const Vec4 operator[](int i) const {return columns[i];}
     const static Mat4 Zero;
     const static Mat4 Identity;
 };
+inline Mat4 CreateMat4();
+inline Mat4 CreateMat4(float diagonal)
+{
+    Mat4 mat;
+    mat[0] = {1.0f, 0.0f, 0.0f, 0.0f};
+    mat[1] = {0.0f, 1.0f, 0.0f, 0.0f};
+    mat[2] = {0.0f, 0.0f, 1.0f, 0.0f};
+    mat[3] = {0.0f, 0.0f, 0.0f, 1.0f};
+    return mat;
+};
+inline Mat4 CreateMat4(Quat quat);
 const Mat4 Mat4::Zero = {};
-const Mat4 Mat4::Identity = Mat4(1.0f);
+const Mat4 Mat4::Identity = CreateMat4(1.0f);
 inline Mat4 operator+(Mat4 a, Mat4 b)
 {
     Mat4 result;
@@ -1005,31 +1025,33 @@ std::ostream& operator<<(std::ostream& a, Mat4 b)
 
 // Quaternion type, uses SSE if enabled.
 
-union Quat
+struct Quat
 {
-    float data[4];
-    struct
+    union
     {
-        union
+        float data[4];
+        struct
         {
-            Vec3 xyz;
-            struct {float x, y, z;};
+            union
+            {
+                Vec3 xyz;
+                struct {float x, y, z;};
+            };
+            float w;
         };
-        float w;
+#ifdef GMATH_USE_SSE
+        __m128 data_sse;
+#endif
     };
-    
-    Quat() = default;
-    Quat(float x, float y, float z, float w);
-    Quat(Vec3 axis, float angle);
-    Quat(Vec4 vec);
-    Quat(float fill);
-    Quat(Mat4 mat);
     const static Quat Zero;
     const static Quat Identity;
-#ifdef GMATH_USE_SSE
-    __m128 data_sse;
-#endif
 };
+inline Quat CreateQuat();
+inline Quat CreateQuat(float fill);
+inline Quat CreateQuat(Vec3 axis, float angle);
+inline Quat CreateQuat(float x, float y, float z, float w);
+inline Quat CreateQuat(Vec4 vec);
+inline Quat CreateQuat(Mat4 mat);
 const Quat Quat::Zero = {0.0f, 0.0f, 0.0f, 0.0f};
 const Quat Quat::Identity = {0.0f, 0.0f, 0.0f, 1.0f};
 inline Quat operator+(Quat a, Quat b)
@@ -1215,7 +1237,7 @@ inline int Dot(IVec2 a, IVec2 b)
 }
 inline int Dot(IVec3 a, IVec3 b)
 {
-    return a.x * b.x + a.y + b.y + a.z + b.z;
+    return a.x * b.x + a.y + b.y + a.z * b.z;
 }
 
 inline float Dot(Vec2 a, Vec2 b)
@@ -1396,7 +1418,7 @@ inline Mat4 Transpose(Mat4 mat)
 
 // Graphics transformations.
 
-inline Mat4 OrthographicProjection(float left, float right, float bottom, float top, float near, float far)
+inline Mat4 CreateOrthoMatrix(float left, float right, float bottom, float top, float near, float far)
 {
     Mat4 result = {};
     result[0][0] = 2.0f / (right - left);
@@ -1413,24 +1435,24 @@ inline Mat4 OrthographicProjection(float left, float right, float bottom, float 
     return result;
 }
 
-inline Mat4 OrthographicProjection(float width, float height, float depth, float near_clip)
+inline Mat4 CreateOrthoMatrix(float width, float height, float depth, float near_clip)
 {
-    return OrthographicProjection(-(width * 0.5f), width * 0.5f, -(height * 0.5f), height * 0.5f, near_clip, near_clip + depth);
+    return CreateOrthoMatrix(-(width * 0.5f), width * 0.5f, -(height * 0.5f), height * 0.5f, near_clip, near_clip + depth);
 }
 
-inline Mat4 OrthographicProjection(Vec3 extent, float near_clip)
+inline Mat4 CreateOrthoMatrix(Vec3 extent, float near_clip)
 {
-    return OrthographicProjection(extent.width, extent.height, extent.depth, near_clip);
+    return CreateOrthoMatrix(extent.width, extent.height, extent.depth, near_clip);
 }
 
-inline Mat4 PerspectiveProjection(float fov, float aspect, float near, float far)
+inline Mat4 CreatePerspectiveMatrix(float fov, float aspect, float near, float far)
 {
     Mat4 result = {};
     float cotan = 1.0f / Tan(fov * (GMATH_PI / 360.f));
     result[0][0] = cotan / aspect;
     result[1][1] = cotan;
     result[2][3] = -1.0f;
-    result[2][2] = far / (near - far);// (near + far) / (near - far);
+    result[2][2] = far / (near - far);
 #ifdef GMATH_DEPTH_ZERO_TO_ONE
     result[3][2] = (near * far) / (near - far);
 #else
@@ -1439,15 +1461,15 @@ inline Mat4 PerspectiveProjection(float fov, float aspect, float near, float far
     return result;
 }
 
-inline Mat4 TranslationMatrix(Vec3 translation)
+inline Mat4 CreateTranslationMatrix(Vec3 translation)
 {
-    Mat4 result = Mat4(1.0f);
-    result[3] = Vec4(translation, 1.0f);
+    Mat4 result = CreateMat4(1.0f);
+    result[3] = CreateVec4(translation, 1.0f);
     return result;
 }
 
 
-inline Mat4 ScalingMatrix(Vec3 scale)
+inline Mat4 CreateScalingMatrix(Vec3 scale)
 {
     Mat4 result = {};
     result[0][0] = scale.x;
@@ -1457,8 +1479,8 @@ inline Mat4 ScalingMatrix(Vec3 scale)
     return result;
 }
 
-inline Mat4 RotationMatrix(float angle, Vec3 axis);
-inline Mat4 LookAtMatrix(Vec3 eye_location, Vec3 target, Vec3 world_up);
+inline Mat4 CreateRotationMatrix(float angle, Vec3 axis);
+inline Mat4 CreateLookAtMatrix(Vec3 eye_location, Vec3 target, Vec3 world_up);
 
 // Quaternion math.
 
@@ -1510,116 +1532,82 @@ Quat Invert(Quat quat);
 
 #ifdef GMATH_IMPLEMENTATION
 
-// Type conversion between int and float vectors.
-
-IVec2::IVec2(Vec2 vec)
-{
-    x = (int)vec.x;
-    y = (int)vec.y;
-}
-IVec3::IVec3(Vec3 vec)
-{
-    x = (int)vec.x;
-    y = (int)vec.y;
-    z = (int)vec.z;
-}
-
-Vec2::Vec2(IVec2 vec)
-{
-    x = (float)vec.x;
-    y = (float)vec.y;
-}
-
-Vec3::Vec3(IVec3 vec)
-{
-    x = (float)vec.x;
-    y = (float)vec.y;
-    z = (float)vec.z;
-}
-
-Vec3::Vec3(Vec2 xy, float z)
-{
-    this->xy = xy;
-    this->z = z;
-}
 // Vec4/Quat constructors.
 
-Vec4::Vec4(float fill)
+Vec4 CreateVec4(float fill)
 {
+    Vec4 vec;
 #ifdef GMATH_USE_SSE
-    data_sse = _mm_set1_ps(1.0f);
+    vec.data_sse = _mm_set1_ps(1.0f);
 #else
-    x = 1.0f;
-    y = 1.0f;
-    z = 1.0f;
-    w = 1.0f;
-#endif
-}
-Vec4::Vec4(Vec3 xyz, float w)
-{
-#ifdef GMATH_USE_SSE
-    data_sse = _mm_setr_ps(xyz.x, xyz.y, xyz.z, w);
-#else
-    this->xyz = xyz;
-    this->w = w;
+    vec = {x, y, z, w};
+    return vec;
 #endif
 }
 
-Vec4::Vec4(float x, float y, float z, float w)
+Vec4 CreateVec4(Vec3 xyz, float w)
 {
+    Vec4 vec;
 #ifdef GMATH_USE_SSE
-    data_sse = _mm_setr_ps(x, y, z, w);
+    vec.data_sse = _mm_setr_ps(xyz.x, xyz.y, xyz.z, w);
 #else
-    this->x = x;
-    this->y = y;
-    this->z = z;
-    this->w = w;
+    vec = {xyz,x, xyz.y, xyz.z, w};
+    return vec;
 #endif
 }
 
-Quat::Quat(float x, float y, float z, float w)
+Vec4 CreateVec4(float x, float y, float z, float w)
 {
+    Vec4 vec;
 #ifdef GMATH_USE_SSE
-    data_sse = _mm_setr_ps(x, y, z, w);
+    vec.data_sse = _mm_setr_ps(x, y, z, w);
 #else
-    this->x = x;
-    this->y = y;
-    this->z = z;
-    this->w = w;
+    vec = {x, y, z, w};
+    return vec;
 #endif
 }
 
-Quat::Quat(Vec4 vec)
+Quat CreateQuat(float x, float y, float z, float w)
 {
+    Quat quat;
 #ifdef GMATH_USE_SSE
-    data_sse = vec.data_sse;
+    quat.data_sse = _mm_setr_ps(x, y, z, w);
 #else
-    x = vec.x;
-    y = vec.y;
-    z = vec.z;
-    w = vec.w;
+    quat = {x, y, z, w};
+    return quat;
 #endif
 }
 
-Quat::Quat(float fill)
+Quat CreateQuat(Vec4 vec)
 {
+    Quat quat;
 #ifdef GMATH_USE_SSE
-    data_sse = _mm_set1_ps(fill);
+    quat.data_sse = vec.data_sse;
 #else
-    x = fill;
-    y = fill;
-    z = fill;
-    w = fill;
+    quat = {vec.x, vec.y, vec.z, vec.w};
+    return quat;
 #endif
 }
 
-Quat::Quat(Vec3 axis, float angle)
+Quat CreateQuat(float fill)
+{
+    Quat quat;
+#ifdef GMATH_USE_SSE
+    quat.data_sse = _mm_set1_ps(fill);
+#else
+    quat = {fill, fill, fill, fill};
+#endif
+    return quat;
+}
+
+Quat CreateQuat(Vec3 axis, float angle)
 {
     Quat result;
     axis = Normalize(axis);
     float sin = Sin(angle / 2.0f);
     result.xyz = axis * sin;
     result.w = Cos(angle / 2.0f);
+    return result;
 }
 
 Quat Slerp(Quat a, Quat b, float alpha)
@@ -1631,6 +1619,26 @@ Quat Slerp(Quat a, Quat b, float alpha)
     return (left + right) * (1.0f / Sin(angle));
 }
 
+// Type conversions.
+IVec2::operator Vec2() const
+{
+    return {(float)x, (float)y};
+}
+
+Vec2::operator IVec2() const
+{
+    return {(int)x, (int)y};
+}
+
+IVec3::operator Vec3() const
+{
+    return {(float)x, (float)y, (float)z};
+}
+
+Vec3::operator IVec3() const
+{
+    return {(int)x, (int)y, (int)z};
+}
 // Matrix math.
 
 Mat4 operator*(Mat4 a, Mat4 b)
@@ -1667,7 +1675,7 @@ Vec4 operator*(Mat4 mat, Vec4 vec)
     return result;
 }
 
-Mat4 RotationMatrix(Vec3 axis, float angle)
+Mat4 CreateRotationMatrix(Vec3 axis, float angle)
 {
     Mat4 result = {};
     axis = Normalize(axis);
@@ -1690,7 +1698,7 @@ Mat4 RotationMatrix(Vec3 axis, float angle)
     return result;
 }
 
-Mat4 LookAtMatrix(Vec3 location, Vec3 target, Vec3 world_up)
+Mat4 CreateLookAtMatrix(Vec3 location, Vec3 target, Vec3 world_up)
 {
     Mat4 result;
     Vec3 forward = Normalize(target - location);
@@ -1699,17 +1707,18 @@ Mat4 LookAtMatrix(Vec3 location, Vec3 target, Vec3 world_up)
     result[0] = {right.x, up.x, -forward.x, 0.0f};
     result[1] = {right.y, up.y, -forward.y, 0.0f};
     result[2] = {right.z, up.z, -forward.z, 0.0f};
-    result[3] = {-Dot(right, location), -Dot(up, location), Dot(forward, location), 1.0f};
+    result[3] = {-Dot(right, location), -Dot(up, location), -Dot(forward, location), 1.0f};
     return result;
 }
 
 Quat Invert(Quat quat)
 {
-    return Quat(-quat.x, -quat.y, -quat.z, quat.w) / Dot(quat, quat);
+    return CreateQuat(-quat.x, -quat.y, -quat.z, quat.w) / Dot(quat, quat);
 }
 
-Mat4::Mat4(Quat quat)
+Mat4 CreateMat4(Quat quat)
 {
+    Mat4 mat = {};
     quat = Normalize(quat);
     float xx = quat.x * quat.x;
     float yy = quat.y * quat.y;
@@ -1720,25 +1729,26 @@ Mat4::Mat4(Quat quat)
     float wx = quat.w * quat.x;
     float wy = quat.w * quat.y;
     float wz = quat.w * quat.z;
-    columns[0][0] = 1.0f - 2.0f * (yy + zz);
-    columns[0][1] = 2.0f * (xy + wz);
-    columns[0][2] = 2.0f * (xz - wy);
-    columns[0][3] = 0.0f;
+    mat[0][0] = 1.0f - 2.0f * (yy + zz);
+    mat[0][1] = 2.0f * (xy + wz);
+    mat[0][2] = 2.0f * (xz - wy);
+    mat[0][3] = 0.0f;
     
-    columns[1][0] = 2.0f * (xy - wz);
-    columns[1][1] = 1.0f - 2.0f * (xx + zz);
-    columns[1][2] = 2.0f * (yz + wx);
-    columns[1][3] = 0.0f;
+    mat[1][0] = 2.0f * (xy - wz);
+    mat[1][1] = 1.0f - 2.0f * (xx + zz);
+    mat[1][2] = 2.0f * (yz + wx);
+    mat[1][3] = 0.0f;
     
-    columns[2][0] = 2.0f * (xz + wy);
-    columns[2][1] = 2.0f * (yz - wx);
-    columns[2][2] = 1.0f - 2.0f * (xx + yy);
-    columns[2][3] = 0.0f;
+    mat[2][0] = 2.0f * (xz + wy);
+    mat[2][1] = 2.0f * (yz - wx);
+    mat[2][2] = 1.0f - 2.0f * (xx + yy);
+    mat[2][3] = 0.0f;
     
-    columns[3][0] = 0.0f;
-    columns[3][1] = 0.0f;
-    columns[3][2] = 0.0f;
-    columns[3][3] = 1.0f;
+    mat[3][0] = 0.0f;
+    mat[3][1] = 0.0f;
+    mat[3][2] = 0.0f;
+    mat[3][3] = 1.0f;
+    return mat;
 }
 
 // This method taken from Mike Day at Insomniac Games.
@@ -1748,7 +1758,7 @@ Mat4::Mat4(Quat quat)
 // would be *post*-multiplied to a vector to rotate it, meaning the matrix is
 // the transpose of what we're dealing with. But, because our matrices are
 // stored in column-major order, the indices *appear* to match the paper.
-Quat::Quat(Mat4 mat)
+Quat CreateQuat(Mat4 mat)
 {
     float t;
     Quat q;
@@ -1779,11 +1789,7 @@ Quat::Quat(Mat4 mat)
         }
     }
     
-    q = q * (0.5f / Sqrt(t));
-    x = q.x;
-    y = q.y;
-    z = q.z;
-    w = q.w;
+    return q * (0.5f / Sqrt(t));
 }
 
 #endif /* GMATH_IMPLEMENTATION */
