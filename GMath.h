@@ -1707,7 +1707,7 @@ Mat4 CreateLookAtMatrix(Vec3 location, Vec3 target, Vec3 world_up)
     result[0] = {right.x, up.x, -forward.x, 0.0f};
     result[1] = {right.y, up.y, -forward.y, 0.0f};
     result[2] = {right.z, up.z, -forward.z, 0.0f};
-    result[3] = {-Dot(right, location), -Dot(up, location), Dot(forward, location), 1.0f};
+    result[3] = {-Dot(right, location), -Dot(up, location), -Dot(forward, location), 1.0f};
     return result;
 }
 
