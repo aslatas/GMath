@@ -1,3 +1,5 @@
+#ifndef GMATH_H
+#define GMATH_H
 /*
 ================================================================================
 
@@ -132,9 +134,6 @@ comment into the readme.
 
 ================================================================================
 */
-
-#ifndef GMATH_H
-#define GMATH_H
 
 #ifdef _MSC_VER
 #pragma warning(disable:4201)
